@@ -291,6 +291,15 @@
     .ex-out { margin-top: var(--sp2); font-size: 15px; font-weight: 700; color: var(--violet-d);
       background: var(--violet-soft); border-radius: var(--r-xs); padding: 12px; text-align: center; }
     .rate-quick { display: flex; gap: 8px; margin-top: 8px; }
+    .x-wallet { margin-top: var(--sp2); border-top: 1px solid var(--border); padding-top: 12px; }
+    .x-wallet-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 5px 0; font-size: 13px; }
+    .x-wallet-row .lbl { color: var(--muted); font-weight: 600; }
+    .x-wallet-row .vals { display: flex; gap: 14px; }
+    .x-wallet-row .v-q { color: var(--teal-d); font-weight: 700; }
+    .x-wallet-row .v-usd { color: var(--violet); font-weight: 700; }
+    .x-wallet-row.after { border-top: 1px dashed var(--border); padding-top: 9px; margin-top: 4px; }
+    .x-wallet-row .up::before { content: '↑ '; color: var(--pos); }
+    .x-wallet-row .down::before { content: '↓ '; color: var(--neg); }
     .mini { margin-top: var(--sp2); border-top: 1px solid var(--border); padding-top: 12px; }
     .mini h4 { font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
     .mini-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
@@ -480,8 +489,9 @@
               <div class="card-h"><span class="dot" style="background:var(--violet)"></span><h3>Cambiar divisas</h3></div>
               <div class="field"><label>Operación</label><div class="seg" id="x-dir"><button data-dir="vender" class="on" type="button">Vendo dólares</button><button data-dir="comprar" type="button">Compro dólares</button></div></div>
               <div class="field"><label id="x-usd-label">Dólares a vender</label><input class="input" id="x-usd" type="number" step="0.01" min="0" placeholder="0.00"></div>
-              <div class="field"><label>Tasa de cambio (Q por $1)</label><input class="input" id="x-rate" type="number" step="0.0001" min="0" placeholder="7.85"><div class="rate-quick" id="x-quick"></div></div>
+              <div class="field"><label>Tasa de cambio (Q por $1)</label><input class="input" id="x-rate" type="number" step="0.0001" min="0" placeholder="7.85"></div>
               <div class="field"><label>Comisión del banco (Q, opcional)</label><input class="input" id="x-fee" type="number" step="0.01" min="0" placeholder="0.00"></div>
+              <div class="x-wallet" id="x-wallet"></div>
               <div class="ex-out" id="x-out">Recibes: Q0.00</div>
               <button class="btn violet" id="add-cambio" type="button">Confirmar cambio</button>
             </div>
@@ -958,9 +968,6 @@
     /* ---------- Render: Registrar ---------- */
     function renderRegistrar() {
       $('#quick').innerHTML = QUICK.map(q => `<button class="chip" data-quick="${esc(q)}" type="button">${esc(q)}</button>`).join('');
-      $('#x-quick').innerHTML =
-        `<button class="chip" data-rate="${state.rates.venta}" data-dir="vender" type="button">Venta ${nf.format(num(state.rates.venta))}</button>` +
-        `<button class="chip" data-rate="${state.rates.compra}" data-dir="comprar" type="button">Compra ${nf.format(num(state.rates.compra))}</button>`;
       if (!$('#x-rate').value) $('#x-rate').value = state.ui.xDir === 'comprar' ? state.rates.compra : state.rates.venta;
       const names = [...new Set(state.moves.filter(m => m.kind === 'gasto' && m.concept).map(m => m.concept))].slice(0, 60);
       $('#products').innerHTML = names.map(n => `<option value="${esc(n)}">`).join('');
@@ -982,6 +989,15 @@
       const feeTxt = fee > 0 ? ' · comisión Q' + nf.format(fee) : '';
       if (dir === 'comprar') $('#x-out').textContent = 'Pagas: ' + money(q + fee, 'Q') + ' y recibes ' + money(usd, 'USD');
       else $('#x-out').textContent = 'Recibes: ' + money(q - fee, 'Q') + feeTxt;
+      const w = $('#x-wallet'); if (!w) return;
+      const t = totals();
+      let newQ, newUSD;
+      if (dir === 'comprar') { newQ = t.balQ - q - fee; newUSD = t.balUSD + usd; }
+      else { newQ = t.balQ + q - fee; newUSD = t.balUSD - usd; }
+      const moved = usd > 0;
+      w.innerHTML = `
+        <div class="x-wallet-row"><span class="lbl">Saldo actual</span><span class="vals"><span class="v-q num">${signed(t.balQ, 'Q')}</span><span class="v-usd num">${signed(t.balUSD, 'USD')}</span></span></div>
+        <div class="x-wallet-row after"><span class="lbl">Después del cambio</span><span class="vals"><span class="v-q num ${moved ? (newQ >= t.balQ ? 'up' : 'down') : ''}">${signed(newQ, 'Q')}</span><span class="v-usd num ${moved ? (newUSD >= t.balUSD ? 'up' : 'down') : ''}">${signed(newUSD, 'USD')}</span></span></div>`;
     }
     function previewCat() {
       const el = $('#g-cat-preview'); if (!el) return;
@@ -1246,7 +1262,6 @@
       $('#nav').addEventListener('click', e => { const b = e.target.closest('button[data-tab]'); if (b) setTab(b.dataset.tab); });
 
       $('#quick').addEventListener('click', e => { const b = e.target.closest('[data-quick]'); if (b) { $('#g-concept').value = b.dataset.quick; previewCat(); $('#g-amount').focus(); } });
-      $('#x-quick').addEventListener('click', e => { const b = e.target.closest('[data-rate]'); if (b) { $('#x-rate').value = b.dataset.rate; if (b.dataset.dir) { state.ui.xDir = b.dataset.dir; syncSeg('#x-dir', 'dir', b.dataset.dir); save(); } updateExchange(); } });
       $('#x-dir').addEventListener('click', e => { const b = e.target.closest('[data-dir]'); if (b) { state.ui.xDir = b.dataset.dir; syncSeg('#x-dir', 'dir', b.dataset.dir); $('#x-rate').value = b.dataset.dir === 'comprar' ? state.rates.compra : state.rates.venta; save(); updateExchange(); } });
       $('#g-cur').addEventListener('click', e => { const b = e.target.closest('[data-cur]'); if (b) { state.ui.gCur = b.dataset.cur; syncSeg('#g-cur', 'cur', b.dataset.cur); save(); } });
       $('#g-fijo').addEventListener('click', e => { const b = e.target.closest('[data-fijo]'); if (b) { state.ui.gFijo = b.dataset.fijo; syncSeg('#g-fijo', 'fijo', b.dataset.fijo); save(); } });
