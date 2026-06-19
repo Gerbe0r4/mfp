@@ -478,8 +478,10 @@
             </div>
             <div class="card">
               <div class="card-h"><span class="dot" style="background:var(--violet)"></span><h3>Cambiar divisas</h3></div>
-              <div class="field"><label>Dólares a cambiar</label><input class="input" id="x-usd" type="number" step="0.01" min="0" placeholder="0.00"></div>
+              <div class="field"><label>Operación</label><div class="seg" id="x-dir"><button data-dir="vender" class="on" type="button">Vendo dólares</button><button data-dir="comprar" type="button">Compro dólares</button></div></div>
+              <div class="field"><label id="x-usd-label">Dólares a vender</label><input class="input" id="x-usd" type="number" step="0.01" min="0" placeholder="0.00"></div>
               <div class="field"><label>Tasa de cambio (Q por $1)</label><input class="input" id="x-rate" type="number" step="0.0001" min="0" placeholder="7.85"><div class="rate-quick" id="x-quick"></div></div>
+              <div class="field"><label>Comisión del banco (Q, opcional)</label><input class="input" id="x-fee" type="number" step="0.01" min="0" placeholder="0.00"></div>
               <div class="ex-out" id="x-out">Recibes: Q0.00</div>
               <button class="btn violet" id="add-cambio" type="button">Confirmar cambio</button>
             </div>
@@ -562,7 +564,8 @@
       'Educación':               { color: '#5C9EF2', kw: ['curso','libro','libros','colegiatura','universidad','matricula','utiles','cuaderno','lapiz','lapicero','copias','educacion','capacitacion'] },
       'Ocio':                    { color: '#FBBF24', kw: ['cine','juego','videojuego','salida','fiesta','concierto','viaje','paseo','entrada','parque','ocio','diversion'] },
       'Mascotas':                { color: '#C99A5B', kw: ['perro','gato','croquetas','veterinario','mascota','mascotas','arena','correa'] },
-      'Finanzas':                { color: '#5566D9', kw: ['banco','comision','interes','prestamo','tarjeta','ahorro','cuota','seguro','finanzas','transferencia'] },
+      'Comisiones':              { color: '#8B5CF6', kw: ['comision','comisiones','retiro','cargo','fee','hotmart','penalizacion','cuota bancaria'] },
+      'Finanzas':                { color: '#5566D9', kw: ['banco','interes','prestamo','tarjeta','ahorro','cuota','seguro','finanzas','transferencia'] },
       'Otros':                   { color: '#94A3B8', kw: [] }
     };
     const FALLBACK = '#94A3B8';
@@ -581,7 +584,7 @@
       budgets: { totalQ: 0, totalUSD: 0, cat: {} },
       goals: [], recurring: [],
       catColors: {}, customCats: [], hiddenCats: [],
-      ui: { gCur: 'Q', gFijo: 'var', iCur: 'Q', donutCur: 'Q', fvCur: 'Q' }
+      ui: { gCur: 'Q', gFijo: 'var', iCur: 'Q', donutCur: 'Q', fvCur: 'Q', xDir: 'vender' }
     });
 
     let state = load();
@@ -674,7 +677,11 @@
       const mk = viewKey();
       const t = { inQ: 0, outQ: 0, inUSD: 0, outUSD: 0, exQ: 0, exUSD: 0, fijoQ: 0, varQ: 0, byCatQ: {}, byCatUSD: {}, monthOutQ: 0, monthOutUSD: 0, monthInQ: 0, monthInUSD: 0, antSum: 0, antCount: 0 };
       for (const m of state.moves) {
-        if (m.kind === 'cambio') { t.exUSD += num(m.usd); t.exQ += num(m.q); continue; }
+        if (m.kind === 'cambio') {
+          if (m.dir === 'comprar') { t.exUSD -= num(m.usd); t.exQ -= num(m.q); } // compro USD: Q baja, USD sube
+          else { t.exUSD += num(m.usd); t.exQ += num(m.q); }                     // vendo USD: Q sube, USD baja (por defecto)
+          continue;
+        }
         const a = num(m.amount), isMonth = monthKey(m.date) === mk;
         if (m.kind === 'gasto') { if (m.cur === 'USD') t.outUSD += a; else t.outQ += a; }
         else { if (m.cur === 'USD') t.inUSD += a; else t.inQ += a; }
@@ -951,11 +958,14 @@
     /* ---------- Render: Registrar ---------- */
     function renderRegistrar() {
       $('#quick').innerHTML = QUICK.map(q => `<button class="chip" data-quick="${esc(q)}" type="button">${esc(q)}</button>`).join('');
-      $('#x-quick').innerHTML = RATES_QUICK.map(r => `<button class="chip" data-rate="${r}" type="button">${nf.format(r)}</button>`).join('');
-      if (!$('#x-rate').value) $('#x-rate').value = state.rates.compra;
+      $('#x-quick').innerHTML =
+        `<button class="chip" data-rate="${state.rates.venta}" data-dir="vender" type="button">Venta ${nf.format(num(state.rates.venta))}</button>` +
+        `<button class="chip" data-rate="${state.rates.compra}" data-dir="comprar" type="button">Compra ${nf.format(num(state.rates.compra))}</button>`;
+      if (!$('#x-rate').value) $('#x-rate').value = state.ui.xDir === 'comprar' ? state.rates.compra : state.rates.venta;
       const names = [...new Set(state.moves.filter(m => m.kind === 'gasto' && m.concept).map(m => m.concept))].slice(0, 60);
       $('#products').innerHTML = names.map(n => `<option value="${esc(n)}">`).join('');
       syncSeg('#g-cur', 'cur', state.ui.gCur); syncSeg('#g-fijo', 'fijo', state.ui.gFijo); syncSeg('#i-cur', 'cur', state.ui.iCur);
+      syncSeg('#x-dir', 'dir', state.ui.xDir);
       renderIngresoList(); updateExchange();
     }
     function renderIngresoList() {
@@ -965,7 +975,14 @@
       if (!ings.length) { host.innerHTML = `<div style="font-size:12.5px;color:var(--muted);padding:4px 0">Aún no hay ingresos este mes.</div>`; return; }
       host.innerHTML = ings.map(m => `<div class="mini-row"><span class="c">${esc(m.concept)}</span><span class="v num">${money(m.amount, m.cur)} ${m.cur}</span><button class="mini-x" data-del="${m.id}" type="button" aria-label="Borrar">&times;</button></div>`).join('');
     }
-    function updateExchange() { const usd = num($('#x-usd').value), rate = num($('#x-rate').value); $('#x-out').textContent = 'Recibes: ' + money(usd * rate, 'Q'); }
+    function updateExchange() {
+      const usd = num($('#x-usd').value), rate = num($('#x-rate').value), fee = num($('#x-fee').value);
+      const dir = state.ui.xDir || 'vender', q = usd * rate;
+      const lbl = $('#x-usd-label'); if (lbl) lbl.textContent = dir === 'comprar' ? 'Dólares a comprar' : 'Dólares a vender';
+      const feeTxt = fee > 0 ? ' · comisión Q' + nf.format(fee) : '';
+      if (dir === 'comprar') $('#x-out').textContent = 'Pagas: ' + money(q + fee, 'Q') + ' y recibes ' + money(usd, 'USD');
+      else $('#x-out').textContent = 'Recibes: ' + money(q - fee, 'Q') + feeTxt;
+    }
     function previewCat() {
       const el = $('#g-cat-preview'); if (!el) return;
       const v = $('#g-concept').value.trim();
@@ -998,7 +1015,9 @@
       const rows = list.map(m => {
         const fecha = new Date(m.date).toLocaleDateString('es-GT', { day: 'numeric', month: 'numeric' });
         if (m.kind === 'cambio') {
-          return `<tr><td class="num">${fecha}</td><td colspan="3"><span class="cambio"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>Cambio: <b class="num">${money(m.usd, 'USD')}</b> &rarr; <b class="num">${money(m.q, 'Q')}</b></span></td><td class="r"><button class="del" data-del="${m.id}" type="button" aria-label="Borrar">&times;</button></td></tr>`;
+          const buy = m.dir === 'comprar';
+          const flow = buy ? `<b class="num">${money(m.q, 'Q')}</b> &rarr; <b class="num">${money(m.usd, 'USD')}</b>` : `<b class="num">${money(m.usd, 'USD')}</b> &rarr; <b class="num">${money(m.q, 'Q')}</b>`;
+          return `<tr><td class="num">${fecha}</td><td colspan="3"><span class="cambio"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>${buy ? 'Compra' : 'Venta'} de divisas: ${flow}</span></td><td class="r"><button class="del" data-del="${m.id}" type="button" aria-label="Borrar">&times;</button></td></tr>`;
         }
         const col = catColor(m.cat), isG = m.kind === 'gasto';
         const cat = isG ? `<button class="cat-tag" data-cat="${m.id}" type="button" style="background:${col}22;color:${col}">${esc(m.cat)}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>` : `<span class="cat-tag" style="background:var(--pos-soft);color:var(--pos)">Ingreso</span>`;
@@ -1115,10 +1134,12 @@
       $('#i-concept').value = ''; $('#i-amount').value = ''; commit();
     }
     function addCambio() {
-      const usd = num($('#x-usd').value), rate = num($('#x-rate').value);
+      const usd = num($('#x-usd').value), rate = num($('#x-rate').value), fee = num($('#x-fee').value);
       if (usd <= 0 || rate <= 0) { flash('#x-usd'); return; }
-      state.moves.unshift({ id: uid(), kind: 'cambio', usd, rate, q: usd * rate, date: new Date().toISOString() });
-      $('#x-usd').value = ''; commit();
+      const dir = state.ui.xDir || 'vender', now = new Date().toISOString();
+      state.moves.unshift({ id: uid(), kind: 'cambio', dir, usd, rate, q: usd * rate, date: now });
+      if (fee > 0) state.moves.unshift({ id: uid(), kind: 'gasto', concept: 'Comisión por ' + (dir === 'comprar' ? 'compra' : 'venta') + ' de divisas', amount: fee, cur: 'Q', fijo: false, cat: 'Comisiones', date: now });
+      $('#x-usd').value = ''; $('#x-fee').value = ''; commit();
     }
     function delMove(id) { state.moves = state.moves.filter(m => m.id !== id); commit(); }
     function flash(sel) { const el = $(sel); if (!el) return; el.style.borderColor = 'var(--neg)'; el.focus(); setTimeout(() => { el.style.borderColor = ''; }, 900); }
@@ -1144,7 +1165,7 @@
       const head = ['Fecha', 'Tipo', 'Concepto', 'Categoria', 'Moneda', 'Monto'];
       const rows = state.moves.map(m => {
         const fecha = new Date(m.date).toISOString().slice(0, 10);
-        if (m.kind === 'cambio') return [fecha, 'cambio', 'Cambio USD a Q', '', 'USD/Q', num(m.usd) + ' -> ' + num(m.q)];
+        if (m.kind === 'cambio') return [fecha, 'cambio', (m.dir === 'comprar' ? 'Compra' : 'Venta') + ' de divisas', '', 'USD/Q', '$' + num(m.usd) + ' / Q' + num(m.q)];
         return [fecha, m.kind, m.concept, m.cat, m.cur, (m.kind === 'gasto' ? '-' : '') + num(m.amount)];
       });
       const csv = [head, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\r\n');
@@ -1225,7 +1246,8 @@
       $('#nav').addEventListener('click', e => { const b = e.target.closest('button[data-tab]'); if (b) setTab(b.dataset.tab); });
 
       $('#quick').addEventListener('click', e => { const b = e.target.closest('[data-quick]'); if (b) { $('#g-concept').value = b.dataset.quick; previewCat(); $('#g-amount').focus(); } });
-      $('#x-quick').addEventListener('click', e => { const b = e.target.closest('[data-rate]'); if (b) { $('#x-rate').value = b.dataset.rate; updateExchange(); } });
+      $('#x-quick').addEventListener('click', e => { const b = e.target.closest('[data-rate]'); if (b) { $('#x-rate').value = b.dataset.rate; if (b.dataset.dir) { state.ui.xDir = b.dataset.dir; syncSeg('#x-dir', 'dir', b.dataset.dir); save(); } updateExchange(); } });
+      $('#x-dir').addEventListener('click', e => { const b = e.target.closest('[data-dir]'); if (b) { state.ui.xDir = b.dataset.dir; syncSeg('#x-dir', 'dir', b.dataset.dir); $('#x-rate').value = b.dataset.dir === 'comprar' ? state.rates.compra : state.rates.venta; save(); updateExchange(); } });
       $('#g-cur').addEventListener('click', e => { const b = e.target.closest('[data-cur]'); if (b) { state.ui.gCur = b.dataset.cur; syncSeg('#g-cur', 'cur', b.dataset.cur); save(); } });
       $('#g-fijo').addEventListener('click', e => { const b = e.target.closest('[data-fijo]'); if (b) { state.ui.gFijo = b.dataset.fijo; syncSeg('#g-fijo', 'fijo', b.dataset.fijo); save(); } });
       $('#i-cur').addEventListener('click', e => { const b = e.target.closest('[data-cur]'); if (b) { state.ui.iCur = b.dataset.cur; syncSeg('#i-cur', 'cur', b.dataset.cur); save(); } });
@@ -1234,10 +1256,11 @@
       $('#add-cambio').addEventListener('click', addCambio);
       ['#g-concept', '#g-amount'].forEach(s => $(s).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addGasto(); } }));
       ['#i-concept', '#i-amount'].forEach(s => $(s).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addIngreso(); } }));
-      ['#x-usd', '#x-rate'].forEach(s => $(s).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addCambio(); } }));
+      ['#x-usd', '#x-rate', '#x-fee'].forEach(s => $(s).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addCambio(); } }));
       $('#g-concept').addEventListener('input', previewCat);
       $('#x-usd').addEventListener('input', updateExchange);
       $('#x-rate').addEventListener('input', updateExchange);
+      $('#x-fee').addEventListener('input', updateExchange);
 
       // filtros
       $('#f-search').addEventListener('input', e => { filters.q = e.target.value; renderMovimientos(); });
