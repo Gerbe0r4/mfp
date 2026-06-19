@@ -285,6 +285,18 @@
     .drill-item .di-date { color: var(--muted); min-width: 50px; font-size: 12px; }
     .drill-item .di-name { flex: 1; min-width: 0; font-weight: 600; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .drill-item .di-amt { font-weight: 700; color: var(--neg); white-space: nowrap; }
+    .drill-item .di-cat { color: var(--muted); font-weight: 500; }
+    .ant-toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: var(--muted); background: none; border: 0; padding: 11px 0 3px; cursor: pointer; }
+    .ant-toggle:hover { color: var(--amber-d); }
+    .ant-toggle .chev { width: 13px; height: 13px; transition: transform .2s; }
+    .ant-toggle .chev.up { transform: rotate(180deg); }
+    /* tooltip de graficas */
+    .chart-wrap { position: relative; }
+    .area-hit { cursor: pointer; }
+    .chart-tip { position: absolute; transform: translate(-50%, -100%); background: var(--surface); border: 1px solid var(--border-2); color: var(--ink); padding: 7px 11px; border-radius: 9px; font-size: 12px; pointer-events: none; white-space: nowrap; z-index: 5; display: flex; flex-direction: column; gap: 2px; }
+    .chart-tip[hidden] { display: none; }
+    .chart-tip b { font-weight: 700; text-transform: capitalize; }
+    .chart-tip span { font-weight: 700; color: var(--teal-d); }
 
     /* charts (SVG) */
     .chart-legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
@@ -817,11 +829,12 @@
       const pts = points.map((p, i) => `${x(i).toFixed(1)},${y(p.v).toFixed(1)}`).join(' ');
       const area = `${x(0).toFixed(1)},${base} ` + pts + ` ${x(points.length - 1).toFixed(1)},${base}`;
       const dots = points.map((p, i) => `<circle cx="${x(i).toFixed(1)}" cy="${y(p.v).toFixed(1)}" r="3.5" fill="var(--surface)" stroke="var(--teal)" stroke-width="2.5"/>`).join('');
+      const hits = points.map((p, i) => `<circle class="area-hit" cx="${x(i).toFixed(1)}" cy="${y(p.v).toFixed(1)}" r="16" fill="transparent" data-label="${esc(p.label)}" data-val="${esc(p.disp || '')}"/>`).join('');
       const labels = points.map((p, i) => `<text x="${x(i).toFixed(1)}" y="${(H - 6).toFixed(1)}" text-anchor="middle">${esc(p.label)}</text>`).join('');
       const zero = min < 0 ? `<line x1="${padX}" y1="${y(0).toFixed(1)}" x2="${W - padX}" y2="${y(0).toFixed(1)}" stroke="var(--border)" stroke-dasharray="3 3"/>` : '';
       return `<svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">
         <defs><linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--teal)" stop-opacity="0.35"/><stop offset="100%" stop-color="var(--teal)" stop-opacity="0"/></linearGradient></defs>
-        ${zero}<polygon points="${area}" fill="url(#areaGrad)"/><polyline points="${pts}" fill="none" stroke="var(--teal)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>${dots}${labels}</svg>`;
+        ${zero}<polygon points="${area}" fill="url(#areaGrad)"/><polyline points="${pts}" fill="none" stroke="var(--teal)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>${dots}${labels}${hits}</svg>`;
     }
 
     /* ---------- Render: Resumen ---------- */
@@ -909,14 +922,22 @@
         </div>`;
     }
 
+    function antItems() {
+      const mk = viewKey(), thr = num(state.antThr);
+      return state.moves.filter(m => m.kind === 'gasto' && m.cur === 'Q' && monthKey(m.date) === mk && num(m.amount) <= thr)
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
+    }
     function renderAnt(t) {
+      const items = antItems();
       $('#c-ant').innerHTML = `<div class="card-h"><span class="dot" style="background:var(--amber)"></span><h3>Gastos hormiga</h3></div>
         <div class="big-num num amber">${money(t.antSum, 'Q')}</div>
         <div class="sub-meta">${t.antCount ? `<b class="num">${t.antCount}</b> ${t.antCount === 1 ? 'compra' : 'compras'} de <b class="num">${money(num(state.antThr), 'Q')}</b> o menos · <b class="num">${t.monthOutQ ? (t.antSum / t.monthOutQ * 100).toFixed(0) : 0}%</b> de tu gasto en Q` : 'Sin gastos pequeños este mes.'}</div>
-        <p class="hint">Las compras de <b class="num">${money(num(state.antThr), 'Q')}</b> o menos se siente que no pesan, pero juntas suman. Verlas reunidas ayuda a decidir cuáles vale la pena seguir haciendo.</p>`;
+        ${items.length ? `<button class="ant-toggle" data-ant-toggle type="button">${antOpen ? 'Ocultar' : 'Ver'} detalle (${items.length})<svg class="chev ${antOpen ? 'up' : ''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button>
+          ${antOpen ? `<div class="drill-detail">${items.map(m => `<div class="drill-item"><span class="di-date num">${new Date(m.date).toLocaleDateString('es-GT', { day: 'numeric', month: 'short' })}</span><span class="di-name">${esc(m.concept)} <span class="di-cat">· ${esc(m.cat)}</span></span><span class="di-amt num">${money(m.amount, 'Q')}</span></div>`).join('')}</div>` : ''}`
+          : `<p class="hint">Las compras de <b class="num">${money(num(state.antThr), 'Q')}</b> o menos se siente que no pesan, pero juntas suman. Verlas reunidas ayuda a decidir cuáles vale la pena seguir haciendo.</p>`}`;
     }
 
-    let donutDrill = null, goalOpen = null;
+    let donutDrill = null, goalOpen = null, antOpen = false;
     function donutDetail(cat, cur) {
       const mk = viewKey();
       const items = state.moves.filter(m => m.kind === 'gasto' && m.cat === cat && m.cur === cur && monthKey(m.date) === mk)
@@ -1033,10 +1054,18 @@
 
     function renderTrend() {
       const host = $('#c-trend'); const months = monthlySeries(6);
-      let acc = 0; const pts = months.map(m => { acc += m.inV - m.outV; return { label: m.label, v: acc }; });
+      let acc = 0; const pts = months.map(m => { acc += m.inV - m.outV; return { label: m.label, v: acc, disp: signed(acc, 'Q') }; });
       const any = months.some(m => m.inV || m.outV);
       host.innerHTML = `<div class="card-h"><span class="dot" style="background:var(--violet)"></span><h3>Tendencia de saldo</h3></div>
-        ${any ? `<div class="chart-legend"><span><i style="background:var(--teal)"></i>Saldo acumulado (Q, aprox.)</span></div>${areaSVG(pts)}` : emptyBox('Aún no hay datos', 'La tendencia de tu saldo se dibujará mes con mes.')}`;
+        ${any ? `<div class="chart-legend"><span><i style="background:var(--teal)"></i>Saldo acumulado (Q, aprox.)</span></div><div class="chart-wrap">${areaSVG(pts)}<div class="chart-tip" id="trend-tip" hidden></div></div>` : emptyBox('Aún no hay datos', 'La tendencia de tu saldo se dibujará mes con mes.')}`;
+      if (any) bindChartTip(host);
+    }
+    function bindChartTip(host) {
+      const wrap = host.querySelector('.chart-wrap'), tip = host.querySelector('.chart-tip');
+      if (!wrap || !tip) return;
+      const show = el => { const wr = wrap.getBoundingClientRect(), hr = el.getBoundingClientRect(); tip.innerHTML = `<b>${el.dataset.label}</b><span class="num">${el.dataset.val}</span>`; tip.hidden = false; tip.style.left = (hr.left + hr.width / 2 - wr.left) + 'px'; tip.style.top = (hr.top + hr.height / 2 - wr.top - 12) + 'px'; };
+      wrap.addEventListener('mouseover', e => { const h = e.target.closest('.area-hit'); if (h) show(h); });
+      wrap.addEventListener('mouseout', e => { if (e.target.closest('.area-hit')) tip.hidden = true; });
     }
 
     function emptyBox(title, sub) {
@@ -1416,6 +1445,7 @@
         const dcur = e.target.closest('#donut-cur [data-c]'); if (dcur) { state.ui.donutCur = dcur.dataset.c; save(); renderResumen(); return; }
         const fcur = e.target.closest('#fv-cur [data-c]'); if (fcur) { state.ui.fvCur = fcur.dataset.c; save(); renderResumen(); return; }
         const drill = e.target.closest('[data-cat-drill]'); if (drill) { donutDrill = donutDrill === drill.dataset.catDrill ? null : drill.dataset.catDrill; renderDonut(totals()); return; }
+        if (e.target.closest('[data-ant-toggle]')) { antOpen = !antOpen; renderAnt(totals()); return; }
         const ghist = e.target.closest('[data-goal-hist]'); if (ghist) { goalOpen = goalOpen === ghist.dataset.goalHist ? null : ghist.dataset.goalHist; renderGoals(); return; }
         const gdo = e.target.closest('[data-goal-do]'); if (gdo) { const inp = document.querySelector(`[data-goal-add="${gdo.dataset.goalDo}"]`); const add = num(inp && inp.value); const g = state.goals.find(x => x.id === gdo.dataset.goalDo); if (g && add > 0) { if (!g.abonos) g.abonos = []; g.abonos.push({ date: new Date().toISOString(), amount: add }); g.saved = num(g.saved) + add; goalOpen = g.id; commit(); } return; }
         const c = e.target.closest('[data-cat]'); if (c) { if (catMenuId === c.dataset.cat) { closeCatMenu(); } else { openCatMenu(c.dataset.cat, c); } return; }
