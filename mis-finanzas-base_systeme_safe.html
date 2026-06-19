@@ -250,6 +250,41 @@
     .goal-actions { display: flex; gap: 6px; align-items: center; }
     .mini-input { width: 86px; font-size: 13px; font-weight: 600; color: var(--ink); background: var(--surface-2); border: 1px solid var(--border-2); border-radius: 7px; padding: 6px 8px; text-align: right; }
     .mini-input:focus { outline: none; border-color: var(--teal); }
+    .goal-add-row { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
+    .goal-money { display: flex; align-items: center; flex: 1; background: var(--surface-2); border: 1px solid var(--border-2); border-radius: var(--r-xs); padding: 0 12px; }
+    .goal-money i { font-style: normal; color: var(--muted); font-size: 12px; font-weight: 600; white-space: nowrap; }
+    .goal-money input { flex: 1; width: 100%; border: 0; background: none; outline: none; font-size: 14px; font-weight: 600; color: var(--ink-2); padding: 10px 6px; text-align: right; }
+    .goal-money:focus-within { border-color: var(--teal); }
+    .goal-money:focus-within input { color: var(--ink); }
+    .goal-proj { display: flex; align-items: flex-start; gap: 8px; font-size: 12.5px; color: var(--pos); margin-top: 11px; font-weight: 600; line-height: 1.4; }
+    .goal-proj svg { width: 15px; height: 15px; flex-shrink: 0; margin-top: 1px; }
+    .goal-proj b { color: var(--ink); }
+    .goal-proj .proj-soft { color: var(--muted); font-weight: 500; }
+    .goal-done { font-size: 13px; font-weight: 700; color: var(--pos); margin-top: 10px; }
+    .goal-toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: var(--muted); background: none; border: 0; padding: 11px 0 3px; cursor: pointer; }
+    .goal-toggle:hover { color: var(--teal-d); }
+    .goal-toggle .chev { width: 13px; height: 13px; transition: transform .2s; }
+    .goal-toggle .chev.up { transform: rotate(180deg); }
+    .goal-hist { animation: rise .2s ease; }
+    .goal-hist-row { display: flex; justify-content: space-between; gap: 10px; font-size: 12.5px; padding: 6px 0; border-bottom: 1px solid var(--border); }
+    .goal-hist-row:last-child { border-bottom: 0; }
+    .goal-hist-row .date { color: var(--muted); }
+    .goal-hist-row .amt { color: var(--pos); font-weight: 700; }
+    /* desglose de categoria en el donut */
+    .bd-row.drill { width: 100%; font-family: inherit; background: none; border: 0; cursor: pointer; border-radius: 7px; transition: .12s; }
+    .bd-row.drill:hover { background: var(--surface-2); }
+    .bd-row.drill.on { background: var(--surface-2); }
+    .drill-chev { width: 13px; height: 13px; color: var(--muted); flex-shrink: 0; margin-left: 2px; transition: transform .2s; }
+    .bd-row.drill.on .drill-chev { transform: rotate(180deg); }
+    .drill-hint { font-size: 12px; color: var(--muted); margin-top: 10px; }
+    .drill-detail { margin-top: var(--sp2); border-top: 1px solid var(--border); padding-top: 12px; animation: rise .25s ease; }
+    .drill-detail-h { font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .drill-detail-h .muted { color: var(--muted); font-weight: 500; }
+    .drill-item { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+    .drill-item:last-child { border-bottom: 0; }
+    .drill-item .di-date { color: var(--muted); min-width: 50px; font-size: 12px; }
+    .drill-item .di-name { flex: 1; min-width: 0; font-weight: 600; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .drill-item .di-amt { font-weight: 700; color: var(--neg); white-space: nowrap; }
 
     /* charts (SVG) */
     .chart-legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
@@ -583,7 +618,7 @@
       'Hogar y limpieza':        { color: '#6B71F2', kw: ['jabon','detergente','cloro','escoba','trapeador','papel higienico','servilleta','bolsa','limpiador','desinfectante','esponja','hogar','limpieza'] },
       'Servicios básicos':       { color: '#0AAFAF', kw: ['luz','agua potable','gas','electricidad','energia','recibo','internet','cable','telefono','servicio','servicios'] },
       'Transporte':              { color: '#F2845C', kw: ['gasolina','diesel','bus','uber','taxi','pasaje','combustible','parqueo','peaje','aceite de motor','llanta','transporte','tuktuk'] },
-      'Tecnología':              { color: '#38BDF8', kw: ['cooler','laptop','computadora','celular','telefono celular','cable usb','cargador','mouse','teclado','disco','memoria','tecnologia','gadget'] },
+      'Tecnología':              { color: '#38BDF8', kw: ['cooler','laptop','computadora','celular','telefono celular','cable usb','cargador','mouse','teclado','disco','memoria','tecnologia','gadget','microfono','audifonos','audifono','bocina','parlante','monitor','pantalla','impresora','tablet','router','webcam','ssd','usb','auriculares'] },
       'Streaming y suscripciones':{ color: '#9B8CFF', kw: ['netflix','spotify','disney','hbo','max','youtube premium','suscripcion','prime','crunchyroll','streaming','membresia'] },
       'Salud':                   { color: '#F472B6', kw: ['medicina','farmacia','doctor','consulta','pastilla','vitamina','clinica','dentista','laboratorio','salud','hospital'] },
       'Cuidado personal':        { color: '#F27DB0', kw: ['shampoo','champu','jabon de bano','desodorante','pasta dental','cepillo','rastrillo','crema facial','unas','perfume','corte de pelo','barberia','cuidado personal'] },
@@ -881,19 +916,33 @@
         <p class="hint">Las compras de <b class="num">${money(num(state.antThr), 'Q')}</b> o menos se siente que no pesan, pero juntas suman. Verlas reunidas ayuda a decidir cuáles vale la pena seguir haciendo.</p>`;
     }
 
+    let donutDrill = null, goalOpen = null;
+    function donutDetail(cat, cur) {
+      const mk = viewKey();
+      const items = state.moves.filter(m => m.kind === 'gasto' && m.cat === cat && m.cur === cur && monthKey(m.date) === mk)
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
+      if (!items.length) return '';
+      const total = items.reduce((s, m) => s + num(m.amount), 0);
+      return `<div class="drill-detail">
+        <div class="drill-detail-h"><span class="dot" style="background:${catColor(cat)}"></span>${esc(cat)} <span class="muted">· ${items.length} ${items.length === 1 ? 'gasto' : 'gastos'} · ${money(total, cur)}</span></div>
+        ${items.map(m => `<div class="drill-item"><span class="di-date num">${new Date(m.date).toLocaleDateString('es-GT', { day: 'numeric', month: 'short' })}</span><span class="di-name">${esc(m.concept)}${m.fijo ? '<span class="pill">Fijo</span>' : ''}${m.rec ? '<span class="pill rec">Recurrente</span>' : ''}</span><span class="di-amt num">${money(m.amount, cur)}</span></div>`).join('')}
+      </div>`;
+    }
     function renderDonut(t) {
       const host = $('#c-donut'); const cur = state.ui.donutCur;
       const data = cur === 'Q' ? t.byCatQ : t.byCatUSD;
       const cats = Object.entries(data).sort((a, b) => b[1] - a[1]);
       const total = cats.reduce((s, c) => s + c[1], 0);
       const slices = cats.map(([cat, val]) => ({ cat, val, color: catColor(cat) }));
+      if (donutDrill && !data[donutDrill]) donutDrill = null;
       host.innerHTML = `<div class="card-h"><span class="dot" style="background:var(--amber)"></span><h3>En qué se va el dinero</h3>
         <div class="tools"><div class="seg" id="donut-cur"><button data-c="Q" class="${cur === 'Q' ? 'on' : ''}" type="button">Q</button><button data-c="USD" class="${cur === 'USD' ? 'on' : ''}" type="button">$</button></div></div></div>
         ${!total ? emptyBox('Sin gastos en ' + cur + ' este mes', 'Registra un gasto para ver el desglose.') : `
         <div class="donut-body">
           <div class="donut-chart">${donutSVG(slices, 200, 30)}<div class="donut-center"><span class="lab">Gastado</span><span class="val num">${money(total, cur)}</span></div></div>
-          <div class="donut-legend">${cats.map(([cat, val]) => { const p = val / total * 100; return `<div class="bd-row"><span class="dot" style="background:${catColor(cat)}"></span><span class="bd-name">${esc(cat)}</span><span class="bd-amt num">${money(val, cur)}</span><span class="bd-pct num">${p.toFixed(0)}%</span></div>`; }).join('')}</div>
-        </div>`}`;
+          <div class="donut-legend">${cats.map(([cat, val]) => { const p = val / total * 100, on = donutDrill === cat; return `<button class="bd-row drill ${on ? 'on' : ''}" data-cat-drill="${esc(cat)}" type="button"><span class="dot" style="background:${catColor(cat)}"></span><span class="bd-name">${esc(cat)}</span><span class="bd-amt num">${money(val, cur)}</span><span class="bd-pct num">${p.toFixed(0)}%</span><svg class="drill-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button>`; }).join('')}</div>
+        </div>
+        ${donutDrill ? donutDetail(donutDrill, cur) : `<p class="drill-hint">Toca una categoría para ver en qué se gastó.</p>`}`}`;
     }
 
     function renderFV(t) {
@@ -924,16 +973,41 @@
       }).join('');
     }
 
+    function goalProjection(g) {
+      const abonos = g.abonos || [];
+      if (!abonos.length || g.saved >= g.target || g.saved <= 0) return '';
+      const first = Math.min(...abonos.map(a => new Date(a.date).getTime())), now = Date.now();
+      const days = (now - first) / 86400000;
+      if (days < 2) return `<span class="proj-soft">Registra abonos en distintos días y te estimo cuándo lo lograrás.</span>`;
+      const rate = g.saved / days; if (rate <= 0) return '';
+      const remaining = g.target - g.saved, daysToGo = Math.ceil(remaining / rate);
+      let txt;
+      if (daysToGo <= 45) txt = `~${daysToGo} ${daysToGo === 1 ? 'día' : 'días'}`;
+      else { const months = Math.max(1, Math.round(daysToGo / 30)); txt = `~${months} ${months === 1 ? 'mes' : 'meses'}`; }
+      const d = new Date(now + daysToGo * 86400000).toLocaleDateString('es-GT', { day: 'numeric', month: 'short', year: 'numeric' });
+      return `A este ritmo lo logras en <b>${txt}</b> (aprox. ${d})`;
+    }
     function renderGoals() {
       const host = $('#c-goals');
       host.innerHTML = `<div class="card-h"><span class="dot" style="background:var(--pos)"></span><h3>Metas de ahorro</h3></div>`;
       if (!state.goals.length) { host.innerHTML += `<p class="hint" style="border:0;padding:0;margin:0">Crea metas de ahorro en Ajustes (por ejemplo un fondo de emergencia) y sigue su progreso aquí.</p>`; return; }
       host.innerHTML += state.goals.map(g => {
+        const abonos = g.abonos || [];
         const pct = g.target ? Math.min(g.saved / g.target * 100, 100) : 0;
-        return `<div class="goal"><div class="goal-top"><span class="dot" style="background:${g.color}"></span><span class="nm">${esc(g.name)}</span><span class="pct num">${pct.toFixed(0)}%</span></div>
+        const done = g.saved >= g.target && g.target > 0;
+        const proj = goalProjection(g);
+        const open = goalOpen === g.id;
+        return `<div class="goal">
+          <div class="goal-top"><span class="dot" style="background:${g.color}"></span><span class="nm">${esc(g.name)}</span><span class="pct num">${pct.toFixed(0)}%</span></div>
           <div class="goal-bar"><i style="width:${pct}%;background:${g.color}"></i></div>
-          <div class="goal-meta"><span><b class="num">${money(g.saved, 'Q')}</b> de ${money(g.target, 'Q')}</span>
-            <span class="goal-actions"><input class="mini-input num" type="number" step="0.01" placeholder="Abonar" data-goal-add="${g.id}"><button class="btn pos sm" data-goal-do="${g.id}" type="button">Abonar</button></span></div></div>`;
+          <div class="goal-meta"><span><b class="num">${money(g.saved, 'Q')}</b> de ${money(g.target, 'Q')}</span></div>
+          ${done ? `<div class="goal-done">¡Meta alcanzada! Llegaste a tu objetivo.</div>` : `<div class="goal-add-row">
+            <div class="goal-money"><i>Q a abonar</i><input class="goal-amt num" type="number" step="0.01" min="0" placeholder="0.00" data-goal-add="${g.id}"></div>
+            <button class="btn pos sm" data-goal-do="${g.id}" type="button">Abonar</button>
+          </div>`}
+          ${proj ? `<div class="goal-proj"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></svg><span>${proj}</span></div>` : ''}
+          ${abonos.length ? `<button class="goal-toggle" data-goal-hist="${g.id}" type="button">${open ? 'Ocultar' : 'Ver'} abonos (${abonos.length})<svg class="chev ${open ? 'up' : ''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button>${open ? `<div class="goal-hist">${[...abonos].reverse().map(a => `<div class="goal-hist-row"><span class="date num">${new Date(a.date).toLocaleDateString('es-GT', { day: 'numeric', month: 'short', year: 'numeric' })}</span><span class="amt num">+${money(a.amount, 'Q')}</span></div>`).join('')}</div>` : ''}` : ''}
+        </div>`;
       }).join('');
     }
 
@@ -1341,13 +1415,18 @@
         const d = e.target.closest('[data-del]'); if (d) { delMove(d.dataset.del); return; }
         const dcur = e.target.closest('#donut-cur [data-c]'); if (dcur) { state.ui.donutCur = dcur.dataset.c; save(); renderResumen(); return; }
         const fcur = e.target.closest('#fv-cur [data-c]'); if (fcur) { state.ui.fvCur = fcur.dataset.c; save(); renderResumen(); return; }
-        const gdo = e.target.closest('[data-goal-do]'); if (gdo) { const inp = document.querySelector(`[data-goal-add="${gdo.dataset.goalDo}"]`); const add = num(inp && inp.value); const g = state.goals.find(x => x.id === gdo.dataset.goalDo); if (g && add > 0) { g.saved = num(g.saved) + add; commit(); } return; }
+        const drill = e.target.closest('[data-cat-drill]'); if (drill) { donutDrill = donutDrill === drill.dataset.catDrill ? null : drill.dataset.catDrill; renderDonut(totals()); return; }
+        const ghist = e.target.closest('[data-goal-hist]'); if (ghist) { goalOpen = goalOpen === ghist.dataset.goalHist ? null : ghist.dataset.goalHist; renderGoals(); return; }
+        const gdo = e.target.closest('[data-goal-do]'); if (gdo) { const inp = document.querySelector(`[data-goal-add="${gdo.dataset.goalDo}"]`); const add = num(inp && inp.value); const g = state.goals.find(x => x.id === gdo.dataset.goalDo); if (g && add > 0) { if (!g.abonos) g.abonos = []; g.abonos.push({ date: new Date().toISOString(), amount: add }); g.saved = num(g.saved) + add; goalOpen = g.id; commit(); } return; }
         const c = e.target.closest('[data-cat]'); if (c) { if (catMenuId === c.dataset.cat) { closeCatMenu(); } else { openCatMenu(c.dataset.cat, c); } return; }
         const pick = e.target.closest('[data-pick]');
         if (pick && catMenuId) { const m = state.moves.find(x => x.id === catMenuId); if (m) { m.cat = pick.dataset.pick; if (m.concept) state.products[norm(m.concept)] = m.cat; commit(); } closeCatMenu(); return; }
         if (catMenuEl && !e.target.closest('#cat-menu')) closeCatMenu();
       });
-      window.addEventListener('keydown', e => { if (e.key === 'Escape') closeCatMenu(); });
+      window.addEventListener('keydown', e => {
+        if (e.key === 'Escape') { closeCatMenu(); closeCal(); }
+        if (e.key === 'Enter' && e.target.matches && e.target.matches('[data-goal-add]')) { e.preventDefault(); const btn = document.querySelector(`[data-goal-do="${e.target.dataset.goalAdd}"]`); if (btn) btn.click(); }
+      });
       window.addEventListener('scroll', positionCatMenu, true);
       window.addEventListener('resize', positionCatMenu);
 
@@ -1360,7 +1439,7 @@
         if (e.target.closest('#reset')) { if (confirm('¿Borrar TODO (movimientos, presupuestos, metas y aprendizaje)? Esto no se puede deshacer.')) { const kt = state.theme; state = defaultState(); state.theme = kt; save(); applyTheme(); renderAll(); renderAjustes(); } return; }
         if (e.target.closest('#bc-add')) { const cat = $('#bc-cat').value, amt = num($('#bc-amt').value); if (cat && amt > 0) { state.budgets.cat[cat] = amt; $('#bc-amt').value = ''; save(); renderBcList(); renderResumen(); } return; }
         const bcd = e.target.closest('[data-bc-del]'); if (bcd) { delete state.budgets.cat[bcd.dataset.bcDel]; save(); renderBcList(); renderResumen(); return; }
-        if (e.target.closest('#goal-add')) { const name = $('#goal-name').value.trim(), target = num($('#goal-target').value); if (name && target > 0) { state.goals.push({ id: uid(), name, target, saved: 0, color: GOAL_COLORS[state.goals.length % GOAL_COLORS.length] }); $('#goal-name').value = ''; $('#goal-target').value = ''; save(); renderGoalList(); renderResumen(); } return; }
+        if (e.target.closest('#goal-add')) { const name = $('#goal-name').value.trim(), target = num($('#goal-target').value); if (name && target > 0) { state.goals.push({ id: uid(), name, target, saved: 0, abonos: [], color: GOAL_COLORS[state.goals.length % GOAL_COLORS.length] }); $('#goal-name').value = ''; $('#goal-target').value = ''; save(); renderGoalList(); renderResumen(); } return; }
         const gd = e.target.closest('[data-goal-del]'); if (gd) { state.goals = state.goals.filter(g => g.id !== gd.dataset.goalDel); save(); renderGoalList(); renderResumen(); return; }
         const rcur = e.target.closest('#rec-cur [data-cur]'); if (rcur) { $$('#rec-cur button').forEach(b => b.classList.toggle('on', b === rcur)); $('#rec-cur-sym').textContent = rcur.dataset.cur === 'USD' ? '$' : 'Q'; return; }
         if (e.target.closest('#rec-add')) { const concept = $('#rec-concept').value.trim(), amt = num($('#rec-amt').value); const cur = ($('#rec-cur .on') || {}).dataset ? $('#rec-cur .on').dataset.cur : 'Q'; if (concept && amt > 0) { state.recurring.push({ id: uid(), concept, amount: amt, cur, cat: classify(concept) }); $('#rec-concept').value = ''; $('#rec-amt').value = ''; applyRecurring(); save(); renderRecList(); renderAll(); } return; }
