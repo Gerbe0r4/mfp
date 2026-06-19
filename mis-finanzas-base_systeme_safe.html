@@ -262,10 +262,10 @@
     .forms { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--sp3); }
     .field { margin-bottom: var(--sp2); }
     .field > label { display: block; font-size: 11.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin-bottom: 7px; }
-    .input { width: 100%; font-size: 15px; font-weight: 500; color: var(--ink); background: var(--surface-2);
+    .input { width: 100%; font-size: 15px; font-weight: 500; color: var(--ink-2); background: var(--surface-2);
       border: 1px solid var(--border-2); border-radius: var(--r-xs); padding: 11px 13px; transition: .15s; }
-    .input:focus { outline: none; border-color: var(--teal); background: var(--surface); box-shadow: var(--ring-foc); }
-    .input::placeholder { color: var(--muted); }
+    .input:focus { outline: none; border-color: var(--teal); color: var(--ink); background: var(--surface); box-shadow: var(--ring-foc); }
+    .input::placeholder { color: var(--muted); opacity: .65; }
     select.input { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%237C8D9C' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 34px; }
     .row { display: flex; gap: var(--sp2); }
     .row .field { flex: 1; margin-bottom: 0; }
@@ -291,6 +291,17 @@
     .ex-out { margin-top: var(--sp2); font-size: 15px; font-weight: 700; color: var(--violet-d);
       background: var(--violet-soft); border-radius: var(--r-xs); padding: 12px; text-align: center; }
     .rate-quick { display: flex; gap: 8px; margin-top: 8px; }
+    .x-result { margin-top: var(--sp2); background: var(--violet-soft); border-radius: var(--r-xs); padding: 12px 14px; }
+    .x-result[hidden] { display: none; }
+    .x-result-head { font-size: 14px; font-weight: 700; color: var(--violet-d); }
+    .x-result-head b { color: var(--violet-d); }
+    .x-comm { font-size: 12px; color: var(--muted); margin-top: 5px; }
+    .x-comm b { color: var(--neg); }
+    .x-comm-month { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; font-size: 12.5px; }
+    .x-comm-month:empty { display: none; }
+    .x-comm-month .lbl { color: var(--muted); font-weight: 600; }
+    .x-comm-month b { color: var(--neg); }
+    .cambio-rate { font-size: 11.5px; color: var(--muted); font-weight: 600; margin-left: 4px; }
     .x-wallet { margin-top: var(--sp2); border-top: 1px solid var(--border); padding-top: 6px; }
     .x-bal { display: flex; align-items: center; gap: 12px; padding: 12px 0; }
     .x-bal + .x-bal { border-top: 1px solid var(--border); }
@@ -491,10 +502,14 @@
             <div class="card">
               <div class="card-h"><span class="dot" style="background:var(--violet)"></span><h3>Cambiar divisas</h3></div>
               <div class="field"><label>Operación</label><div class="seg" id="x-dir"><button data-dir="vender" class="on" type="button">Vendo dólares</button><button data-dir="comprar" type="button">Compro dólares</button></div></div>
-              <div class="field"><label id="x-usd-label">Dólares a vender</label><input class="input" id="x-usd" type="number" step="0.01" min="0" placeholder="0.00"></div>
-              <div class="field"><label>Tasa de cambio (Q por $1)</label><input class="input" id="x-rate" type="number" step="0.0001" min="0" placeholder="7.85"></div>
-              <div class="field"><label>Comisión del banco (Q, opcional)</label><input class="input" id="x-fee" type="number" step="0.01" min="0" placeholder="0.00"></div>
+              <div class="field"><label id="x-amt-label">Quetzales que quiero recibir</label><input class="input" id="x-amt" type="number" step="1" min="0" placeholder="0.00"></div>
+              <div class="row">
+                <div class="field"><label>Tasa de venta</label><input class="input" id="x-venta" type="number" step="0.0001" min="0" placeholder="7.49"></div>
+                <div class="field"><label>Tasa de compra</label><input class="input" id="x-compra" type="number" step="0.0001" min="0" placeholder="7.85"></div>
+              </div>
+              <div class="x-result" id="x-result" hidden></div>
               <div class="x-wallet" id="x-wallet"></div>
+              <div class="x-comm-month" id="x-comm-month"></div>
               <button class="btn violet" id="add-cambio" type="button">Confirmar cambio</button>
             </div>
           </div>
@@ -970,7 +985,8 @@
     /* ---------- Render: Registrar ---------- */
     function renderRegistrar() {
       $('#quick').innerHTML = QUICK.map(q => `<button class="chip" data-quick="${esc(q)}" type="button">${esc(q)}</button>`).join('');
-      if (!$('#x-rate').value) $('#x-rate').value = state.ui.xDir === 'comprar' ? state.rates.compra : state.rates.venta;
+      if (!$('#x-venta').value) $('#x-venta').value = state.rates.venta;
+      if (!$('#x-compra').value) $('#x-compra').value = state.rates.compra;
       const names = [...new Set(state.moves.filter(m => m.kind === 'gasto' && m.concept).map(m => m.concept))].slice(0, 60);
       $('#products').innerHTML = names.map(n => `<option value="${esc(n)}">`).join('');
       syncSeg('#g-cur', 'cur', state.ui.gCur); syncSeg('#g-fijo', 'fijo', state.ui.gFijo); syncSeg('#i-cur', 'cur', state.ui.iCur);
@@ -984,22 +1000,51 @@
       if (!ings.length) { host.innerHTML = `<div style="font-size:12.5px;color:var(--muted);padding:4px 0">Aún no hay ingresos este mes.</div>`; return; }
       host.innerHTML = ings.map(m => `<div class="mini-row"><span class="c">${esc(m.concept)}</span><span class="v num">${money(m.amount, m.cur)} ${m.cur}</span><button class="mini-x" data-del="${m.id}" type="button" aria-label="Borrar">&times;</button></div>`).join('');
     }
+    // calcula la operacion de cambio a partir de los campos
+    function exchangeCalc() {
+      const amt = num($('#x-amt').value), venta = num($('#x-venta').value), compra = num($('#x-compra').value);
+      const dir = state.ui.xDir || 'vender', spread = Math.max(0, compra - venta);
+      let usd, qMoved, rate;
+      if (dir === 'vender') { usd = venta > 0 ? amt / venta : 0; qMoved = amt; rate = venta; }
+      else { usd = amt; qMoved = amt * compra; rate = compra; }
+      const commission = usd * spread;
+      const dQ = dir === 'vender' ? qMoved : -qMoved;
+      const dUSD = dir === 'vender' ? -usd : usd;
+      const valid = amt > 0 && rate > 0;
+      return { amt, venta, compra, dir, usd, qMoved, rate, commission, dQ, dUSD, valid };
+    }
     function updateExchange() {
-      const usd = num($('#x-usd').value), rate = num($('#x-rate').value), fee = num($('#x-fee').value);
-      const dir = state.ui.xDir || 'vender', q = usd * rate;
-      const lbl = $('#x-usd-label'); if (lbl) lbl.textContent = dir === 'comprar' ? 'Dólares a comprar' : 'Dólares a vender';
-      const w = $('#x-wallet'); if (!w) return;
-      const t = totals();
-      // delta por moneda segun la operacion
-      let dQ, dUSD;
-      if (dir === 'comprar') { dQ = -(q + fee); dUSD = usd; }   // compro dolares: bajan Q, suben USD
-      else { dQ = q - fee; dUSD = -usd; }                       // vendo dolares: suben Q, bajan USD
-      const newQ = t.balQ + dQ, newUSD = t.balUSD + dUSD;
-      const moved = usd > 0;
-      const deltaTag = (d, cur) => (moved && d !== 0) ? `<span class="x-bal-delta ${d >= 0 ? 'up' : 'down'}">${d >= 0 ? '↑ +' : '↓ −'}${money(d, cur)}</span>` : '';
-      w.innerHTML = `
-        <div class="x-bal q"><span class="x-bal-badge">Q</span><div class="x-bal-mid"><div class="x-bal-lbl">Saldo en quetzales</div><div class="x-bal-amount num">${signed(newQ, 'Q')}</div></div>${deltaTag(dQ, 'Q')}</div>
-        <div class="x-bal usd"><span class="x-bal-badge">$</span><div class="x-bal-mid"><div class="x-bal-lbl">Saldo en dólares</div><div class="x-bal-amount num">${signed(newUSD, 'USD')}</div></div>${deltaTag(dUSD, 'USD')}</div>`;
+      const c = exchangeCalc();
+      const lbl = $('#x-amt-label'); if (lbl) lbl.textContent = c.dir === 'vender' ? 'Quetzales que quiero recibir' : 'Dólares que quiero comprar';
+      const amtEl = $('#x-amt'); if (amtEl) amtEl.step = c.dir === 'vender' ? '1' : '0.01';
+      // resultado de la conversion
+      const res = $('#x-result');
+      if (res) {
+        if (c.valid) {
+          res.hidden = false;
+          const head = c.dir === 'vender'
+            ? `Vendes <b class="num">${money(c.usd, 'USD')}</b> y recibes <b class="num">${money(c.qMoved, 'Q')}</b>`
+            : `Pagas <b class="num">${money(c.qMoved, 'Q')}</b> y recibes <b class="num">${money(c.usd, 'USD')}</b>`;
+          res.innerHTML = `<div class="x-result-head">${head}</div><div class="x-comm">Comisión del banco: <b class="num">${money(c.commission, 'Q')}</b> · brecha Q${nf.format(c.compra)} vs Q${nf.format(c.venta)}</div>`;
+        } else { res.hidden = true; res.innerHTML = ''; }
+      }
+      // billetera proyectada
+      const w = $('#x-wallet');
+      if (w) {
+        const t = totals();
+        const newQ = t.balQ + c.dQ, newUSD = t.balUSD + c.dUSD, moved = c.valid;
+        const deltaTag = (d, cur) => (moved && Math.abs(d) > 0.005) ? `<span class="x-bal-delta ${d >= 0 ? 'up' : 'down'}">${d >= 0 ? '↑ +' : '↓ −'}${money(d, cur)}</span>` : '';
+        w.innerHTML = `
+          <div class="x-bal q"><span class="x-bal-badge">Q</span><div class="x-bal-mid"><div class="x-bal-lbl">Saldo en quetzales</div><div class="x-bal-amount num">${signed(newQ, 'Q')}</div></div>${deltaTag(c.dQ, 'Q')}</div>
+          <div class="x-bal usd"><span class="x-bal-badge">$</span><div class="x-bal-mid"><div class="x-bal-lbl">Saldo en dólares</div><div class="x-bal-amount num">${signed(newUSD, 'USD')}</div></div>${deltaTag(c.dUSD, 'USD')}</div>`;
+      }
+      // comisiones de cambio del mes
+      const cme = $('#x-comm-month');
+      if (cme) {
+        const cm = thisMonth(); let total = 0, n = 0;
+        for (const m of state.moves) if (m.kind === 'cambio' && monthKey(m.date) === cm) { total += num(m.commission); n++; }
+        cme.innerHTML = total > 0 ? `<span class="lbl">Comisiones de cambio este mes (${n})</span><b class="num">${money(total, 'Q')}</b>` : '';
+      }
     }
     function previewCat() {
       const el = $('#g-cat-preview'); if (!el) return;
@@ -1035,7 +1080,8 @@
         if (m.kind === 'cambio') {
           const buy = m.dir === 'comprar';
           const flow = buy ? `<b class="num">${money(m.q, 'Q')}</b> &rarr; <b class="num">${money(m.usd, 'USD')}</b>` : `<b class="num">${money(m.usd, 'USD')}</b> &rarr; <b class="num">${money(m.q, 'Q')}</b>`;
-          return `<tr><td class="num">${fecha}</td><td colspan="3"><span class="cambio"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>${buy ? 'Compra' : 'Venta'} de divisas: ${flow}</span></td><td class="r"><button class="del" data-del="${m.id}" type="button" aria-label="Borrar">&times;</button></td></tr>`;
+          const meta = `<span class="cambio-rate">tasa Q${m.rate != null ? nf.format(num(m.rate)) : '—'}${num(m.commission) > 0 ? ' · comisión ' + money(m.commission, 'Q') : ''}</span>`;
+          return `<tr><td class="num">${fecha}</td><td colspan="3"><span class="cambio"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>${buy ? 'Compra' : 'Venta'} de divisas: ${flow} ${meta}</span></td><td class="r"><button class="del" data-del="${m.id}" type="button" aria-label="Borrar">&times;</button></td></tr>`;
         }
         const col = catColor(m.cat), isG = m.kind === 'gasto';
         const cat = isG ? `<button class="cat-tag" data-cat="${m.id}" type="button" style="background:${col}22;color:${col}">${esc(m.cat)}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>` : `<span class="cat-tag" style="background:var(--pos-soft);color:var(--pos)">Ingreso</span>`;
@@ -1152,12 +1198,11 @@
       $('#i-concept').value = ''; $('#i-amount').value = ''; commit();
     }
     function addCambio() {
-      const usd = num($('#x-usd').value), rate = num($('#x-rate').value), fee = num($('#x-fee').value);
-      if (usd <= 0 || rate <= 0) { flash('#x-usd'); return; }
-      const dir = state.ui.xDir || 'vender', now = new Date().toISOString();
-      state.moves.unshift({ id: uid(), kind: 'cambio', dir, usd, rate, q: usd * rate, date: now });
-      if (fee > 0) state.moves.unshift({ id: uid(), kind: 'gasto', concept: 'Comisión por ' + (dir === 'comprar' ? 'compra' : 'venta') + ' de divisas', amount: fee, cur: 'Q', fijo: false, cat: 'Comisiones', date: now });
-      $('#x-usd').value = ''; $('#x-fee').value = ''; commit();
+      const c = exchangeCalc();
+      if (!c.valid) { flash('#x-amt'); return; }
+      state.rates.venta = c.venta; state.rates.compra = c.compra;   // recuerda las tasas usadas
+      state.moves.unshift({ id: uid(), kind: 'cambio', dir: c.dir, usd: c.usd, rate: c.rate, q: c.qMoved, commission: c.commission, date: new Date().toISOString() });
+      $('#x-amt').value = ''; commit();
     }
     function delMove(id) { state.moves = state.moves.filter(m => m.id !== id); commit(); }
     function flash(sel) { const el = $(sel); if (!el) return; el.style.borderColor = 'var(--neg)'; el.focus(); setTimeout(() => { el.style.borderColor = ''; }, 900); }
@@ -1183,7 +1228,7 @@
       const head = ['Fecha', 'Tipo', 'Concepto', 'Categoria', 'Moneda', 'Monto'];
       const rows = state.moves.map(m => {
         const fecha = new Date(m.date).toISOString().slice(0, 10);
-        if (m.kind === 'cambio') return [fecha, 'cambio', (m.dir === 'comprar' ? 'Compra' : 'Venta') + ' de divisas', '', 'USD/Q', '$' + num(m.usd) + ' / Q' + num(m.q)];
+        if (m.kind === 'cambio') return [fecha, 'cambio', (m.dir === 'comprar' ? 'Compra' : 'Venta') + ' de divisas (tasa ' + num(m.rate) + ', comision Q' + num(m.commission) + ')', '', 'USD/Q', '$' + num(m.usd) + ' / Q' + num(m.q)];
         return [fecha, m.kind, m.concept, m.cat, m.cur, (m.kind === 'gasto' ? '-' : '') + num(m.amount)];
       });
       const csv = [head, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\r\n');
@@ -1264,7 +1309,7 @@
       $('#nav').addEventListener('click', e => { const b = e.target.closest('button[data-tab]'); if (b) setTab(b.dataset.tab); });
 
       $('#quick').addEventListener('click', e => { const b = e.target.closest('[data-quick]'); if (b) { $('#g-concept').value = b.dataset.quick; previewCat(); $('#g-amount').focus(); } });
-      $('#x-dir').addEventListener('click', e => { const b = e.target.closest('[data-dir]'); if (b) { state.ui.xDir = b.dataset.dir; syncSeg('#x-dir', 'dir', b.dataset.dir); $('#x-rate').value = b.dataset.dir === 'comprar' ? state.rates.compra : state.rates.venta; save(); updateExchange(); } });
+      $('#x-dir').addEventListener('click', e => { const b = e.target.closest('[data-dir]'); if (b) { state.ui.xDir = b.dataset.dir; syncSeg('#x-dir', 'dir', b.dataset.dir); $('#x-amt').value = ''; save(); updateExchange(); } });
       $('#g-cur').addEventListener('click', e => { const b = e.target.closest('[data-cur]'); if (b) { state.ui.gCur = b.dataset.cur; syncSeg('#g-cur', 'cur', b.dataset.cur); save(); } });
       $('#g-fijo').addEventListener('click', e => { const b = e.target.closest('[data-fijo]'); if (b) { state.ui.gFijo = b.dataset.fijo; syncSeg('#g-fijo', 'fijo', b.dataset.fijo); save(); } });
       $('#i-cur').addEventListener('click', e => { const b = e.target.closest('[data-cur]'); if (b) { state.ui.iCur = b.dataset.cur; syncSeg('#i-cur', 'cur', b.dataset.cur); save(); } });
@@ -1273,11 +1318,9 @@
       $('#add-cambio').addEventListener('click', addCambio);
       ['#g-concept', '#g-amount'].forEach(s => $(s).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addGasto(); } }));
       ['#i-concept', '#i-amount'].forEach(s => $(s).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addIngreso(); } }));
-      ['#x-usd', '#x-rate', '#x-fee'].forEach(s => $(s).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addCambio(); } }));
+      ['#x-amt', '#x-venta', '#x-compra'].forEach(s => $(s).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addCambio(); } }));
       $('#g-concept').addEventListener('input', previewCat);
-      $('#x-usd').addEventListener('input', updateExchange);
-      $('#x-rate').addEventListener('input', updateExchange);
-      $('#x-fee').addEventListener('input', updateExchange);
+      ['#x-amt', '#x-venta', '#x-compra'].forEach(s => $(s).addEventListener('input', updateExchange));
 
       // filtros
       $('#f-search').addEventListener('input', e => { filters.q = e.target.value; renderMovimientos(); });
