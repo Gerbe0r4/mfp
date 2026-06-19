@@ -7,7 +7,7 @@
   <meta name="description" content="Control de finanzas personales. Cada centavo, cada Q1 cuenta.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     /* ===================== TOKENS ===================== */
     :root {
@@ -39,24 +39,24 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html { -webkit-text-size-adjust: 100%; }
     body {
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-family: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
       background: var(--bg); color: var(--ink); line-height: 1.5;
       -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
       transition: background .25s ease, color .25s ease;
     }
-    .num { font-family: 'Outfit', 'Inter', sans-serif; font-variant-numeric: tabular-nums; }
+    .num { font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; }
     button { font-family: inherit; cursor: pointer; }
     input, select { font-family: inherit; }
     svg { display: block; }
     ::selection { background: var(--teal-soft); }
-    .app { max-width: 1280px; margin: 0 auto; padding: clamp(16px, 3vw, 32px); }
+    .app { max-width: 1760px; margin: 0 auto; padding: clamp(16px, 3vw, 40px); }
 
     /* ===================== HEADER ===================== */
     .top { display: flex; align-items: center; gap: 14px; margin-bottom: var(--sp3); }
     .logo { width: 48px; height: 48px; border-radius: 14px; flex-shrink: 0;
       background: linear-gradient(135deg, var(--teal), var(--teal-d));
       display: grid; place-items: center; box-shadow: 0 6px 18px -6px rgba(13,217,217,.5); }
-    .top h1 { font-size: 22px; font-weight: 800; letter-spacing: -.02em; line-height: 1.1; }
+    .top h1 { font-size: 22px; font-weight: 700; letter-spacing: -.02em; line-height: 1.1; }
     .top p { font-size: 13px; color: var(--muted); margin-top: 2px; }
     .top .spacer { flex: 1; }
     .month-pill { font-size: 12px; font-weight: 700; color: var(--teal-d); background: var(--teal-soft);
@@ -77,7 +77,7 @@
     .panel.on { display: block; }
     @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
     .panel-head { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin-bottom: var(--sp3); }
-    .panel-head h2 { font-size: 24px; font-weight: 800; letter-spacing: -.02em; }
+    .panel-head h2 { font-size: 24px; font-weight: 700; letter-spacing: -.02em; }
     .panel-head p { font-size: 13.5px; color: var(--muted); margin-top: 3px; }
     .panel-head .month-pill { margin-left: auto; }
 
@@ -95,6 +95,11 @@
     .g-3 { grid-template-columns: repeat(3, 1fr); }
     .mt3 { margin-top: var(--sp3); }
     .span2 { grid-column: span 2; }
+    /* bento denso que aprovecha el ancho */
+    .bento { display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--sp3); align-items: start; }
+    .bento > * { grid-column: span 6; }
+    @media (min-width: 720px) { .bento > .s2 { grid-column: span 3; } .bento > .s3 { grid-column: span 3; } }
+    @media (min-width: 1120px) { .bento > .s2 { grid-column: span 2; } .bento > .s3 { grid-column: span 3; } }
 
     /* wallets */
     .wallet { position: relative; overflow: hidden; }
@@ -102,26 +107,26 @@
     .wallet.q::before { background: var(--teal); }
     .wallet.usd::before { background: var(--violet); }
     .wallet-top { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-    .wallet-badge { width: 40px; height: 40px; border-radius: var(--r-xs); display: grid; place-items: center; font-weight: 800; font-size: 15px; }
+    .wallet-badge { width: 40px; height: 40px; border-radius: var(--r-xs); display: grid; place-items: center; font-weight: 700; font-size: 15px; }
     .wallet.q .wallet-badge { background: var(--teal-soft); color: var(--teal-d); }
     .wallet.usd .wallet-badge { background: var(--violet-soft); color: var(--violet); }
-    .wallet-amount { font-size: clamp(28px, 4vw, 34px); font-weight: 800; letter-spacing: -.02em; line-height: 1.05; }
+    .wallet-amount { font-size: clamp(30px, 3.2vw, 44px); font-weight: 700; letter-spacing: -.02em; line-height: 1.05; }
     .wallet-sub { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 12px; font-size: 13px; color: var(--muted); }
     .wallet-sub b { color: var(--ink-2); font-weight: 700; }
 
     .net { grid-column: 1 / -1; background: linear-gradient(135deg, #101B30, #0A1322); color: #fff; border: 0;
       display: flex; align-items: center; justify-content: space-between; gap: var(--sp3); flex-wrap: wrap; }
     .net .label { color: rgba(255,255,255,.55); }
-    .net-amount { font-size: clamp(26px, 4vw, 32px); font-weight: 800; letter-spacing: -.02em; margin-top: 4px; }
+    .net-amount { font-size: clamp(26px, 4vw, 32px); font-weight: 700; letter-spacing: -.02em; margin-top: 4px; }
     .net-meta { font-size: 12.5px; color: rgba(255,255,255,.6); margin-top: 6px; }
     .net-meta b { color: #fff; }
 
     .stat .stat-top { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
     .stat-line { display: flex; align-items: center; gap: 9px; margin-top: 9px; }
-    .stat-cur { width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; font-size: 11px; font-weight: 800; }
+    .stat-cur { width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; font-size: 11px; font-weight: 700; }
     .stat-cur.q { background: var(--teal-soft); color: var(--teal-d); }
     .stat-cur.usd { background: var(--violet-soft); color: var(--violet); }
-    .stat-val { font-size: 19px; font-weight: 800; letter-spacing: -.01em; }
+    .stat-val { font-size: 19px; font-weight: 700; letter-spacing: -.01em; }
     .stat.gastos .stat-val { color: var(--neg); }
     .stat.ingresos .stat-val { color: var(--pos); }
     .stat-val.neg { color: var(--neg); } .stat-val.pos { color: var(--pos); }
@@ -130,7 +135,7 @@
     .ring-body { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
     .ring-chart { position: relative; width: 132px; height: 132px; flex-shrink: 0; }
     .ring-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-    .ring-pct { font-size: 22px; font-weight: 800; }
+    .ring-pct { font-size: 22px; font-weight: 700; }
     .ring-cap { font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
     .ring-info { flex: 1; min-width: 140px; }
     .ring-info .ln { font-size: 13px; color: var(--ink-2); margin-bottom: 6px; }
@@ -139,10 +144,10 @@
 
     /* donut */
     .donut-body { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
-    .donut-chart { position: relative; width: 180px; height: 180px; flex: 0 0 auto; }
+    .donut-chart { position: relative; width: 200px; height: 200px; flex: 0 0 auto; }
     .donut-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; }
     .donut-center .lab { font-size: 10.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
-    .donut-center .val { font-size: 20px; font-weight: 800; letter-spacing: -.02em; }
+    .donut-center .val { font-size: 20px; font-weight: 700; letter-spacing: -.02em; }
     .donut-legend { flex: 1; min-width: 200px; }
 
     /* breakdown / split */
@@ -157,7 +162,9 @@
     .split-seg { display: grid; place-items: center; color: #fff; font-size: 12px; font-weight: 700; min-width: 2px; transition: width .5s cubic-bezier(.4,0,.2,1); }
 
     /* big number cards */
-    .big-num { font-size: 30px; font-weight: 800; letter-spacing: -.02em; line-height: 1.05; }
+    .big-num { font-size: 34px; font-weight: 700; letter-spacing: -.02em; line-height: 1.05; }
+    .stat-val { font-size: 21px !important; }
+    .card-h h3 { font-size: 16px; }
     .big-num.amber { color: var(--amber-d); }
     .sub-meta { font-size: 13px; color: var(--ink-2); margin-top: 6px; }
     .sub-meta b { color: var(--ink); font-weight: 700; }
@@ -200,7 +207,7 @@
     .chart-legend span { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-2); font-weight: 500; }
     .chart-legend i { width: 10px; height: 10px; border-radius: 3px; }
     .chart-svg { width: 100%; height: auto; display: block; overflow: visible; }
-    .chart-svg text { fill: var(--muted); font-size: 10px; font-family: 'Inter', sans-serif; }
+    .chart-svg text { fill: var(--muted); font-size: 10px; font-family: 'IBM Plex Sans', sans-serif; }
 
     /* ===================== FORMS ===================== */
     .forms { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--sp3); }
@@ -319,11 +326,11 @@
     .onboard { text-align: center; padding: var(--sp4) var(--sp2); }
     .onboard .ob-ic { width: 64px; height: 64px; border-radius: 20px; margin: 0 auto var(--sp2); display: grid; place-items: center;
       background: linear-gradient(135deg, var(--teal), var(--teal-d)); box-shadow: 0 10px 28px -10px rgba(13,217,217,.5); }
-    .onboard h3 { font-size: 20px; font-weight: 800; letter-spacing: -.01em; margin-bottom: 6px; }
+    .onboard h3 { font-size: 20px; font-weight: 700; letter-spacing: -.01em; margin-bottom: 6px; }
     .onboard > p { font-size: 14px; color: var(--muted); max-width: 460px; margin: 0 auto var(--sp3); line-height: 1.6; }
     .ob-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp2); max-width: 640px; margin: 0 auto var(--sp3); }
     .ob-step { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 16px; text-align: left; }
-    .ob-step .n { width: 24px; height: 24px; border-radius: 7px; background: var(--teal-soft); color: var(--teal-d); font-weight: 800; font-size: 13px; display: grid; place-items: center; margin-bottom: 9px; }
+    .ob-step .n { width: 24px; height: 24px; border-radius: 7px; background: var(--teal-soft); color: var(--teal-d); font-weight: 700; font-size: 13px; display: grid; place-items: center; margin-bottom: 9px; }
     .ob-step b { display: block; font-size: 13.5px; margin-bottom: 3px; }
     .ob-step span { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
 
@@ -644,17 +651,21 @@
       return `<svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">${bars}</svg>`;
     }
 
-    function lineSVG(points) {
-      const W = 560, H = 170, padX = 10, padB = 22, padT = 10;
+    function areaSVG(points) {
+      const W = 560, H = 180, padX = 10, padB = 22, padT = 12;
       const vals = points.map(p => p.v);
       const max = Math.max(1, ...vals), min = Math.min(0, ...vals), range = max - min || 1;
       const x = i => padX + (W - padX * 2) * (points.length <= 1 ? 0.5 : i / (points.length - 1));
       const y = v => padT + (H - padT - padB) * (1 - (v - min) / range);
+      const base = H - padB;
       const pts = points.map((p, i) => `${x(i).toFixed(1)},${y(p.v).toFixed(1)}`).join(' ');
-      const dots = points.map((p, i) => `<circle cx="${x(i).toFixed(1)}" cy="${y(p.v).toFixed(1)}" r="3.5" fill="var(--teal)"/>`).join('');
+      const area = `${x(0).toFixed(1)},${base} ` + pts + ` ${x(points.length - 1).toFixed(1)},${base}`;
+      const dots = points.map((p, i) => `<circle cx="${x(i).toFixed(1)}" cy="${y(p.v).toFixed(1)}" r="3.5" fill="var(--surface)" stroke="var(--teal)" stroke-width="2.5"/>`).join('');
       const labels = points.map((p, i) => `<text x="${x(i).toFixed(1)}" y="${(H - 6).toFixed(1)}" text-anchor="middle">${esc(p.label)}</text>`).join('');
       const zero = min < 0 ? `<line x1="${padX}" y1="${y(0).toFixed(1)}" x2="${W - padX}" y2="${y(0).toFixed(1)}" stroke="var(--border)" stroke-dasharray="3 3"/>` : '';
-      return `<svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">${zero}<polyline points="${pts}" fill="none" stroke="var(--teal)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>${dots}${labels}</svg>`;
+      return `<svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">
+        <defs><linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--teal)" stop-opacity="0.35"/><stop offset="100%" stop-color="var(--teal)" stop-opacity="0"/></linearGradient></defs>
+        ${zero}<polygon points="${area}" fill="url(#areaGrad)"/><polyline points="${pts}" fill="none" stroke="var(--teal)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>${dots}${labels}</svg>`;
     }
 
     /* ---------- Render: Resumen ---------- */
@@ -666,7 +677,7 @@
       if (!state.moves.length) { host.innerHTML = onboardHTML(); return; }
 
       const wallet = (cur, bal, inc, out) => `
-        <div class="card wallet ${cur === 'Q' ? 'q' : 'usd'}">
+        <div class="card wallet s3 ${cur === 'Q' ? 'q' : 'usd'}">
           <div class="wallet-top"><span class="wallet-badge">${cur === 'Q' ? 'Q' : '$'}</span><span class="label">Saldo en ${cur === 'Q' ? 'Quetzales' : 'Dólares'}</span></div>
           <div class="wallet-amount num">${signed(bal, cur)}</div>
           <div class="wallet-sub"><span>Ingresos: <b class="num">${money(inc, cur)}</b></span><span>Gastos: <b class="num">${money(out, cur)}</b></span></div>
@@ -678,7 +689,7 @@
         const clsQ = kind === 'balance' ? (q >= 0 ? 'pos' : 'neg') : '';
         const clsU = kind === 'balance' ? (usd >= 0 ? 'pos' : 'neg') : '';
         const c = kind === 'gastos' ? 'neg' : kind === 'ingresos' ? 'pos' : 'teal';
-        return `<div class="card stat ${kind}">
+        return `<div class="card stat s2 ${kind}">
           <div class="stat-top"><span class="dot" style="background:var(--${c})"></span><span class="label">${title}</span></div>
           <div class="stat-line"><span class="stat-cur q">Q</span><span class="stat-val num ${clsQ}">${sQ}${money(q, 'Q')}</span></div>
           <div class="stat-line"><span class="stat-cur usd">$</span><span class="stat-val num ${clsU}">${sU}${money(usd, 'USD')}</span></div>
@@ -686,35 +697,21 @@
       };
 
       host.innerHTML = `
-        <div class="grid g-2">
+        <div class="bento">
           ${wallet('Q', t.balQ, t.inQ, t.outQ)}
           ${wallet('USD', t.balUSD, t.inUSD, t.outUSD)}
-          <div class="card net">
-            <div><span class="label">Patrimonio combinado</span><div class="net-amount num">${signed(t.balQ + t.balUSD * num(state.rates.compra), 'Q')}</div><div class="net-meta">Dólares convertidos a Q a la tasa de compra <b class="num">${nf.format(num(state.rates.compra))}</b></div></div>
-            <div style="text-align:right"><span class="label">En dólares</span><div class="net-amount num">${signed(t.balUSD, 'USD')}</div></div>
-          </div>
-        </div>
-        <div class="grid g-3 mt3">
           ${stat('gastos', 'Gastos del mes', t.monthOutQ, t.monthOutUSD)}
           ${stat('ingresos', 'Ingresos del mes', t.monthInQ, t.monthInUSD)}
           ${stat('balance', 'Balance del mes', t.monthInQ - t.monthOutQ, t.monthInUSD - t.monthOutUSD)}
-        </div>
-        <div class="grid g-2 mt3">
-          <div class="card" id="c-budget"></div>
-          <div class="card" id="c-ant"></div>
-        </div>
-        <div class="grid g-2 mt3">
-          <div class="card" id="c-donut"></div>
-          <div class="card" id="c-fv"></div>
-        </div>
-        <div class="grid g-2 mt3">
-          <div class="card" id="c-budgetcat"></div>
-          <div class="card" id="c-goals"></div>
-        </div>
-        <div class="card mt3" id="c-reco"></div>
-        <div class="grid g-2 mt3">
-          <div class="card" id="c-hist"></div>
-          <div class="card" id="c-trend"></div>
+          <div class="card s2" id="c-budget"></div>
+          <div class="card s2" id="c-ant"></div>
+          <div class="card s2" id="c-fv"></div>
+          <div class="card s3" id="c-donut"></div>
+          <div class="card s3" id="c-budgetcat"></div>
+          <div class="card s3" id="c-goals"></div>
+          <div class="card s3" id="c-reco"></div>
+          <div class="card s3" id="c-hist"></div>
+          <div class="card s3" id="c-trend"></div>
         </div>`;
 
       renderBudgetRing(t); renderAnt(t); renderDonut(t); renderFV(t);
@@ -766,7 +763,7 @@
         <div class="tools"><div class="seg" id="donut-cur"><button data-c="Q" class="${cur === 'Q' ? 'on' : ''}" type="button">Q</button><button data-c="USD" class="${cur === 'USD' ? 'on' : ''}" type="button">$</button></div></div></div>
         ${!total ? emptyBox('Sin gastos en ' + cur + ' este mes', 'Registra un gasto para ver el desglose.') : `
         <div class="donut-body">
-          <div class="donut-chart">${donutSVG(slices, 180, 26)}<div class="donut-center"><span class="lab">Gastado</span><span class="val num">${money(total, cur)}</span></div></div>
+          <div class="donut-chart">${donutSVG(slices, 200, 30)}<div class="donut-center"><span class="lab">Gastado</span><span class="val num">${money(total, cur)}</span></div></div>
           <div class="donut-legend">${cats.map(([cat, val]) => { const p = val / total * 100; return `<div class="bd-row"><span class="dot" style="background:${catColor(cat)}"></span><span class="bd-name">${esc(cat)}</span><span class="bd-amt num">${money(val, cur)}</span><span class="bd-pct num">${p.toFixed(0)}%</span></div>`; }).join('')}</div>
         </div>`}`;
     }
@@ -837,7 +834,7 @@
       let acc = 0; const pts = months.map(m => { acc += m.inV - m.outV; return { label: m.label, v: acc }; });
       const any = months.some(m => m.inV || m.outV);
       host.innerHTML = `<div class="card-h"><span class="dot" style="background:var(--violet)"></span><h3>Tendencia de saldo</h3></div>
-        ${any ? `<div class="chart-legend"><span><i style="background:var(--teal)"></i>Saldo acumulado (Q, aprox.)</span></div>${lineSVG(pts)}` : emptyBox('Aún no hay datos', 'La tendencia de tu saldo se dibujará mes con mes.')}`;
+        ${any ? `<div class="chart-legend"><span><i style="background:var(--teal)"></i>Saldo acumulado (Q, aprox.)</span></div>${areaSVG(pts)}` : emptyBox('Aún no hay datos', 'La tendencia de tu saldo se dibujará mes con mes.')}`;
     }
 
     function emptyBox(title, sub) {
