@@ -38,10 +38,10 @@
     /* ===================== BASE ===================== */
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { width: 100%; max-width: 100%; overflow-x: clip; }
-    html { -webkit-text-size-adjust: 100%; }
+    html { -webkit-text-size-adjust: 100%; background: var(--bg); transition: background .25s ease; }
     body {
       font-family: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
-      background: var(--bg); color: var(--ink); line-height: 1.5;
+      background: var(--bg); color: var(--ink); line-height: 1.5; min-height: 100vh;
       -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
       transition: background .25s ease, color .25s ease;
     }
@@ -79,6 +79,12 @@
     .panel { display: none; animation: rise .3s ease both; min-width: 0; }
     .panel.on { display: block; }
     @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+    @keyframes valuePop { from { opacity: .35; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+    @keyframes cardIn { from { opacity: 0; transform: translateY(10px) scale(.99); } to { opacity: 1; transform: none; } }
+    /* los numeros y tarjetas se animan al actualizarse */
+    .bento > * { animation: cardIn .32s ease both; }
+    .wallet-amount, .stat-val, .big-num, .ring-pct, .donut-center .val, .net-amount, .goal .pct, .pc-top .vals { animation: valuePop .4s ease; }
+    .bd-bar i, .pc-bar i, .goal-bar i, .split-seg { transition: width .55s cubic-bezier(.4,0,.2,1); }
     .panel-head { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin-bottom: var(--sp3); }
     .panel-head h2 { font-size: 24px; font-weight: 700; letter-spacing: -.02em; }
     .panel-head p { font-size: 13.5px; color: var(--muted); margin-top: 3px; }
@@ -237,6 +243,10 @@
     .seg button { font-size: 13px; font-weight: 700; color: var(--muted); background: none; border: 0; padding: 9px 16px; border-radius: 7px; transition: .13s; }
     .seg button.on { background: var(--surface); color: var(--teal-d); }
     .seg.fijo button.on { color: var(--violet-d); }
+    .cat-preview { margin-top: 8px; font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 7px; animation: valuePop .3s ease; }
+    .cat-preview::before { content: 'Se clasificará como'; }
+    .cat-preview-tag { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700; padding: 3px 10px; border-radius: 100px; }
+    .cat-preview-tag .sw { width: 8px; height: 8px; border-radius: 50%; }
     .quick { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: var(--sp2); }
     .chip { font-size: 13px; font-weight: 600; color: var(--ink-2); background: var(--surface-2);
       border: 1px solid var(--border-2); border-radius: 100px; padding: 7px 14px; transition: .13s; }
@@ -408,7 +418,7 @@
             <div class="card">
               <div class="card-h"><span class="dot" style="background:var(--neg)"></span><h3>Nuevo gasto</h3></div>
               <div class="quick" id="quick"></div>
-              <div class="field"><label>Producto o concepto</label><input class="input" id="g-concept" list="products" placeholder="Ej. café, dona, despensa, gasolina…" autocomplete="off"><datalist id="products"></datalist></div>
+              <div class="field"><label>Producto o concepto</label><input class="input" id="g-concept" list="products" placeholder="Ej. café, dona, despensa, gasolina…" autocomplete="off"><datalist id="products"></datalist><div class="cat-preview" id="g-cat-preview" hidden></div></div>
               <div class="row">
                 <div class="field"><label>Monto</label><input class="input" id="g-amount" type="number" step="0.01" min="0" placeholder="0.00"></div>
                 <div class="field" style="flex:0 0 auto"><label>Moneda</label><div class="seg" id="g-cur"><button data-cur="Q" class="on" type="button">Q</button><button data-cur="USD" type="button">$</button></div></div>
@@ -901,6 +911,14 @@
       host.innerHTML = ings.map(m => `<div class="mini-row"><span class="c">${esc(m.concept)}</span><span class="v num">${money(m.amount, m.cur)} ${m.cur}</span><button class="mini-x" data-del="${m.id}" type="button" aria-label="Borrar">&times;</button></div>`).join('');
     }
     function updateExchange() { const usd = num($('#x-usd').value), rate = num($('#x-rate').value); $('#x-out').textContent = 'Recibes: ' + money(usd * rate, 'Q'); }
+    function previewCat() {
+      const el = $('#g-cat-preview'); if (!el) return;
+      const v = $('#g-concept').value.trim();
+      if (!v) { el.hidden = true; el.innerHTML = ''; return; }
+      const cat = classify(v), col = catColor(cat);
+      el.hidden = false;
+      el.innerHTML = `<span class="cat-preview-tag" style="background:${col}22;color:${col}"><span class="sw" style="background:${col}"></span>${esc(cat)}</span>`;
+    }
 
     /* ---------- Render: Movimientos ---------- */
     let filters = { q: '', cat: '', cur: '', kind: '' };
@@ -1033,7 +1051,7 @@
       if (!concept || amount <= 0) { flash('#g-amount'); return; }
       const cat = classify(concept); state.products[norm(concept)] = cat;
       state.moves.unshift({ id: uid(), kind: 'gasto', concept, amount, cur: state.ui.gCur, fijo: state.ui.gFijo === 'fijo', cat, date: new Date().toISOString() });
-      $('#g-concept').value = ''; $('#g-amount').value = ''; commit();
+      $('#g-concept').value = ''; $('#g-amount').value = ''; previewCat(); commit();
     }
     function addIngreso() {
       const concept = $('#i-concept').value.trim(), amount = num($('#i-amount').value);
@@ -1129,7 +1147,7 @@
     function bind() {
       $('#nav').addEventListener('click', e => { const b = e.target.closest('button[data-tab]'); if (b) setTab(b.dataset.tab); });
 
-      $('#quick').addEventListener('click', e => { const b = e.target.closest('[data-quick]'); if (b) { $('#g-concept').value = b.dataset.quick; $('#g-amount').focus(); } });
+      $('#quick').addEventListener('click', e => { const b = e.target.closest('[data-quick]'); if (b) { $('#g-concept').value = b.dataset.quick; previewCat(); $('#g-amount').focus(); } });
       $('#x-quick').addEventListener('click', e => { const b = e.target.closest('[data-rate]'); if (b) { $('#x-rate').value = b.dataset.rate; updateExchange(); } });
       $('#g-cur').addEventListener('click', e => { const b = e.target.closest('[data-cur]'); if (b) { state.ui.gCur = b.dataset.cur; syncSeg('#g-cur', 'cur', b.dataset.cur); save(); } });
       $('#g-fijo').addEventListener('click', e => { const b = e.target.closest('[data-fijo]'); if (b) { state.ui.gFijo = b.dataset.fijo; syncSeg('#g-fijo', 'fijo', b.dataset.fijo); save(); } });
@@ -1137,8 +1155,10 @@
       $('#add-gasto').addEventListener('click', addGasto);
       $('#add-ingreso').addEventListener('click', addIngreso);
       $('#add-cambio').addEventListener('click', addCambio);
-      $('#g-amount').addEventListener('keydown', e => { if (e.key === 'Enter') addGasto(); });
-      $('#i-amount').addEventListener('keydown', e => { if (e.key === 'Enter') addIngreso(); });
+      ['#g-concept', '#g-amount'].forEach(s => $(s).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addGasto(); } }));
+      ['#i-concept', '#i-amount'].forEach(s => $(s).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addIngreso(); } }));
+      ['#x-usd', '#x-rate'].forEach(s => $(s).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addCambio(); } }));
+      $('#g-concept').addEventListener('input', previewCat);
       $('#x-usd').addEventListener('input', updateExchange);
       $('#x-rate').addEventListener('input', updateExchange);
 
