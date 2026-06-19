@@ -37,6 +37,7 @@
 
     /* ===================== BASE ===================== */
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; max-width: 100%; overflow-x: clip; }
     html { -webkit-text-size-adjust: 100%; }
     body {
       font-family: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
@@ -64,6 +65,8 @@
 
     /* ===================== LAYOUT ===================== */
     .shell { display: grid; grid-template-columns: 158px 1fr; gap: var(--sp3); align-items: start; }
+    .shell > main { min-width: 0; }
+    .table-card { max-width: 100%; }
     .nav { position: sticky; top: 16px; background: var(--teal); border-radius: var(--r); padding: 12px 10px;
       display: flex; flex-direction: column; gap: 4px; }
     .nav button { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 6px;
@@ -267,7 +270,7 @@
     .table-head { display: flex; align-items: center; gap: 10px; padding: var(--sp3) var(--sp3) var(--sp2); }
     .table-head h3 { font-size: 16px; font-weight: 700; }
     .count { font-size: 12px; font-weight: 600; color: var(--muted); background: var(--surface-2); padding: 3px 10px; border-radius: 100px; }
-    .scroll { overflow-x: auto; }
+    .scroll { overflow-x: auto; max-width: 100%; }
     table { width: 100%; border-collapse: collapse; min-width: 560px; }
     thead th { font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); text-align: left; padding: 10px 16px; border-bottom: 1px solid var(--border); white-space: nowrap; }
     th.r, td.r { text-align: right; }
@@ -290,16 +293,13 @@
     .cambio { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; color: var(--violet-d); }
     .cambio b { color: var(--ink); }
 
-    .cat-modal-bg { position: fixed; inset: 0; z-index: 100; background: rgba(8,13,26,.5); backdrop-filter: blur(3px); display: grid; place-items: center; padding: 20px; animation: fade .15s ease; }
-    @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
-    .cat-menu { width: min(360px, 92vw); max-height: 78vh; display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--border-2); border-radius: var(--r); overflow: hidden; }
-    .cat-menu-h { display: flex; align-items: center; justify-content: space-between; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 16px 18px; border-bottom: 1px solid var(--border); }
-    .cat-menu-h button { border: 0; background: none; color: var(--muted); font-size: 20px; line-height: 1; padding: 0 4px; cursor: pointer; }
-    .cat-menu-list { overflow-y: auto; padding: 8px; }
-    .cat-opt { display: flex; align-items: center; gap: 10px; width: 100%; font-size: 14px; font-weight: 600; color: var(--ink-2); background: none; border: 0; border-radius: var(--r-xs); padding: 11px 12px; text-align: left; transition: .12s; }
+    .cat-menu { position: fixed; z-index: 100; width: 240px; max-width: calc(100vw - 20px); max-height: 300px; overflow-y: auto;
+      background: var(--surface); border: 1px solid var(--border-2); border-radius: var(--r-sm); padding: 6px; }
+    .cat-menu-h { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 8px 10px 6px; }
+    .cat-opt { display: flex; align-items: center; gap: 9px; width: 100%; font-size: 13px; font-weight: 600; color: var(--ink-2); background: none; border: 0; border-radius: var(--r-xs); padding: 9px 10px; text-align: left; transition: .12s; }
     .cat-opt:hover { background: var(--surface-2); color: var(--ink); }
     .cat-opt.on { color: var(--ink); font-weight: 700; }
-    .cat-opt .sw { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+    .cat-opt .sw { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
 
     /* ===================== AJUSTES ===================== */
     .set-row { display: flex; align-items: center; justify-content: space-between; gap: var(--sp2); padding: 16px 0; flex-wrap: wrap; }
@@ -1081,20 +1081,29 @@
       fr.readAsText(file);
     }
 
-    /* ---------- Menú de categorías (modal centrado) ---------- */
-    let catMenuId = null;
-    function openCatMenu(id) {
+    /* ---------- Menú de categorías (desplegable anclado) ---------- */
+    let catMenuEl = null, catMenuId = null, catMenuAnchor = null;
+    function positionCatMenu() {
+      if (!catMenuEl || !catMenuAnchor) return;
+      const r = catMenuAnchor.getBoundingClientRect();
+      if (r.bottom < 0 || r.top > innerHeight) { closeCatMenu(); return; }
+      const mw = catMenuEl.offsetWidth || 240, mh = catMenuEl.offsetHeight || 300;
+      let left = r.left, top = r.bottom + 6;
+      if (left + mw > innerWidth - 10) left = innerWidth - mw - 10;
+      if (top + mh > innerHeight - 10) top = Math.max(10, r.top - mh - 6);
+      catMenuEl.style.left = Math.max(10, left) + 'px';
+      catMenuEl.style.top = top + 'px';
+    }
+    function openCatMenu(id, anchor) {
       const m = state.moves.find(x => x.id === id); if (!m) return;
       closeCatMenu();
-      catMenuId = id;
-      const bg = document.createElement('div'); bg.className = 'cat-modal-bg'; bg.id = 'cat-modal';
-      bg.innerHTML = `<div class="cat-menu" role="dialog" aria-modal="true">
-        <div class="cat-menu-h">Asignar categoría <button type="button" data-cat-close aria-label="Cerrar">&times;</button></div>
-        <div class="cat-menu-list">${Object.keys(getCats()).map(cat => `<button class="cat-opt ${cat === m.cat ? 'on' : ''}" data-pick="${esc(cat)}" type="button"><span class="sw" style="background:${catColor(cat)}"></span>${esc(cat)}</button>`).join('')}</div>
-      </div>`;
-      document.body.appendChild(bg);
+      catMenuId = id; catMenuAnchor = anchor;
+      catMenuEl = document.createElement('div'); catMenuEl.className = 'cat-menu'; catMenuEl.id = 'cat-menu';
+      catMenuEl.innerHTML = '<div class="cat-menu-h">Asignar categoría</div>' + Object.keys(getCats()).map(cat => `<button class="cat-opt ${cat === m.cat ? 'on' : ''}" data-pick="${esc(cat)}" type="button"><span class="sw" style="background:${catColor(cat)}"></span>${esc(cat)}</button>`).join('');
+      document.body.appendChild(catMenuEl);
+      positionCatMenu();
     }
-    function closeCatMenu() { const el = document.getElementById('cat-modal'); if (el) el.remove(); catMenuId = null; }
+    function closeCatMenu() { if (catMenuEl) { catMenuEl.remove(); catMenuEl = null; } catMenuId = null; catMenuAnchor = null; }
 
     /* ---------- Pestañas ---------- */
     function setTab(tab) {
@@ -1137,12 +1146,14 @@
         const dcur = e.target.closest('#donut-cur [data-c]'); if (dcur) { state.ui.donutCur = dcur.dataset.c; save(); renderResumen(); return; }
         const fcur = e.target.closest('#fv-cur [data-c]'); if (fcur) { state.ui.fvCur = fcur.dataset.c; save(); renderResumen(); return; }
         const gdo = e.target.closest('[data-goal-do]'); if (gdo) { const inp = document.querySelector(`[data-goal-add="${gdo.dataset.goalDo}"]`); const add = num(inp && inp.value); const g = state.goals.find(x => x.id === gdo.dataset.goalDo); if (g && add > 0) { g.saved = num(g.saved) + add; commit(); } return; }
-        const c = e.target.closest('[data-cat]'); if (c) { openCatMenu(c.dataset.cat); return; }
+        const c = e.target.closest('[data-cat]'); if (c) { if (catMenuId === c.dataset.cat) { closeCatMenu(); } else { openCatMenu(c.dataset.cat, c); } return; }
         const pick = e.target.closest('[data-pick]');
         if (pick && catMenuId) { const m = state.moves.find(x => x.id === catMenuId); if (m) { m.cat = pick.dataset.pick; if (m.concept) state.products[norm(m.concept)] = m.cat; commit(); } closeCatMenu(); return; }
-        if (e.target.closest('[data-cat-close]') || (e.target.classList && e.target.classList.contains('cat-modal-bg'))) { closeCatMenu(); return; }
+        if (catMenuEl && !e.target.closest('#cat-menu')) closeCatMenu();
       });
       window.addEventListener('keydown', e => { if (e.key === 'Escape') closeCatMenu(); });
+      window.addEventListener('scroll', positionCatMenu, true);
+      window.addEventListener('resize', positionCatMenu);
 
       // ajustes (delegado en el contenedor, se re-renderiza)
       $('#ajustes-body').addEventListener('click', e => {
