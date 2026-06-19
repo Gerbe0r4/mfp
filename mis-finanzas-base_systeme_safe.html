@@ -461,9 +461,18 @@
   </div>
 
   <script>
-    function enviarAlto() { var h = document.documentElement.scrollHeight; parent.postMessage({ tipo: 'finanzas-alto', alto: h }, '*'); }
+    function enviarAlto() {
+      var app = document.querySelector('.app');
+      // alto real del contenido (no del viewport del iframe), para que encoja en cada pestaña
+      var h = app ? Math.ceil(app.getBoundingClientRect().height) : document.body.scrollHeight;
+      parent.postMessage({ tipo: 'finanzas-alto', alto: h }, '*');
+    }
     window.addEventListener('load', enviarAlto);
-    if (window.ResizeObserver) new ResizeObserver(enviarAlto).observe(document.body);
+    if (window.ResizeObserver) {
+      var ro = new ResizeObserver(enviarAlto);
+      ro.observe(document.body);
+      var appEl = document.querySelector('.app'); if (appEl) ro.observe(appEl);
+    }
   </script>
 
   <script>
